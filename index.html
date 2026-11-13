@@ -300,6 +300,19 @@
       :root { --thumb-w: 108px; --thumb-h: 61px; --pad: 12px; }
       h1 { font-size: 1.2rem; }
     }
+
+    /* 2-column card grid */
+    .list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 10px; }
+    @media (min-width: 700px) { .list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (min-width: 1000px) { .list { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+    .item { border-bottom: 0; }
+    .item a { display: block; padding: 0; min-height: 0; }
+    .thumb, .thumb-fallback { width: 100%; height: auto; aspect-ratio: 16 / 9; flex: none; border-radius: 12px; }
+    .item.is-short .thumb, .item.is-short .thumb-fallback { aspect-ratio: 9 / 16; }
+    .meta { padding: 8px 2px 0; }
+    .title { font-size: 0.88rem; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .sub { font-size: 0.75rem; }
+    .badge { margin-top: 4px; }
   </style>
 </head>
 <body>
@@ -433,9 +446,9 @@
       }
 
       function thumbHtml(v) {
-        var src = "https://i.ytimg.com/vi/" + encodeURIComponent(v.id) + "/mqdefault.jpg";
+        var src = "https://i.ytimg.com/vi/" + encodeURIComponent(v.id) + "/hqdefault.jpg";
         return (
-          '<img class="thumb" src="' + src + '" alt="" width="120" height="68" loading="lazy" decoding="async">' +
+          '<img class="thumb" src="' + src + '" alt="" loading="lazy" decoding="async">' +
           '<span class="thumb-fallback" hidden aria-hidden="true">' +
             '<svg viewBox="0 0 28 28" focusable="false">' +
               '<circle cx="14" cy="14" r="13" fill="currentColor" opacity="0.2"/>' +
@@ -472,7 +485,7 @@
           var sub = chName;
           if (v.views >= 0) sub += " · " + formatViews(v.views);
           html +=
-            '<li class="item"><a href="' +
+            '<li class="item' + (v.short ? ' is-short' : '') + '"><a href="' +
             escapeHtml(href) +
             '" target="_blank" rel="noopener noreferrer">' +
             thumbHtml(v) +
