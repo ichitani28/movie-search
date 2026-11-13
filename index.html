@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)">
   <meta name="theme-color" content="#f6f4f0" media="(prefers-color-scheme: light)">
-  <meta name="description" content="登録6チャンネルの映画まとめ動画を、タイトルで検索できます。">
+  <meta name="description" content="登録7チャンネルの映画まとめ動画を、タイトルで検索できます。">
   <title>映画まとめ動画検索</title>
   <style>
     :root {
@@ -319,11 +319,11 @@
   <div class="wrap">
     <header>
       <h1>映画まとめ動画検索</h1>
-      <p class="lede">登録している6チャンネルのまとめ動画を、タイトルの一部で検索できます。最初はショート動画を先頭に並べています。</p>
+      <p class="lede">登録している7チャンネルのまとめ動画を、タイトルの一部で検索できます。最初はショート動画を先頭に並べています。</p>
       <div class="metrics" aria-label="登録数">
         <div class="metric"><b id="stat-total">—</b><span>登録動画</span></div>
         <div class="metric"><b id="stat-shorts">—</b><span>ショート</span></div>
-        <div class="metric"><b>6</b><span>チャンネル</span></div>
+        <div class="metric"><b id="stat-channels">7</b><span>チャンネル</span></div>
       </div>
     </header>
 
@@ -548,6 +548,8 @@
           }
           document.getElementById("stat-total").textContent = formatCount(videos.length);
           document.getElementById("stat-shorts").textContent = formatCount(shortCount);
+          var elChStat = document.getElementById("stat-channels");
+          if (elChStat) elChStat.textContent = formatCount(channels.length);
 
           for (var c = 0; c < channels.length; c++) {
             var opt = document.createElement("option");
@@ -560,7 +562,7 @@
           var when = data.generatedAtLabel || "";
           note.textContent =
             (when ? when + "時点の、" : "") +
-            "YouTube公開アップロード一覧です。視聴回数はほぼすべての動画で取得できましたが、投稿日は一覧に含まれていません。映画カルチュア FilmIsNow Japanは公開一覧の11,477本を収録しています（以前のチャンネル総数11,540本より63本少ない）。ほかの5チャンネルは総数と一致しています。";
+            "YouTube公開アップロード一覧です。視聴回数はほぼすべての動画で取得できましたが、投稿日は一覧に含まれていません。映画カルチュア FilmIsNow Japanは公開一覧の11,477本を収録しています（以前のチャンネル総数11,540本より63本少ない）。ほかの6チャンネルは総数と一致しています。";
 
           render();
         })
