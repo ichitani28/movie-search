@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f6f4f0" media="(prefers-color-scheme: light)">
+  <meta name="description" content="映画まとめ動画の詳細ページです。">
+  <title>動画詳細 | 映画まとめ動画検索</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f6f4f0;
+      --bg-elev: #ffffff;
+      --text: #1a1916;
+      --text-sub: #5c5850;
+      --border: #e2ddd4;
+      --accent: #0b6e4f;
+      --accent-text: #ffffff;
+      --danger: #a33b2a;
+      --thumb-bg: #e8e4dc;
+      --focus: #0b6e4f;
+      --yt: #e62117;
+      --radius: 12px;
+      --pad: 16px;
+      --font: system-ui, -apple-system, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #111111;
+        --bg-elev: #1c1c1c;
+        --text: #f3f1ec;
+        --text-sub: #b4afa6;
+        --border: #2e2c28;
+        --accent: #3dba8b;
+        --accent-text: #08150f;
+        --danger: #f0a090;
+        --thumb-bg: #2a2824;
+        --focus: #3dba8b;
+        --yt: #ff3b30;
+      }
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-text-size-adjust: 100%;
+      overflow-x: hidden;
+    }
+    body {
+      min-height: 100dvh;
+      padding: 16px var(--pad) 48px;
+      padding-left: max(var(--pad), env(safe-area-inset-left));
+      padding-right: max(var(--pad), env(safe-area-inset-right));
+    }
+    .wrap {
+      max-width: 40rem;
+      margin: 0 auto;
+    }
+    .back {
+      margin: 0 0 16px;
+    }
+    .back a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 650;
+      font-size: 0.95rem;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .back a:active { opacity: 0.75; }
+    .msg {
+      padding: 20px 4px;
+      color: var(--text-sub);
+    }
+    .msg.error { color: var(--danger); }
+    .hero {
+      margin: 0 0 4px;
+    }
+    .hero-thumb,
+    .hero-fallback {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 12px;
+      background: var(--thumb-bg);
+      object-fit: cover;
+      display: block;
+    }
+    .hero.is-short .hero-thumb,
+    .hero.is-short .hero-fallback {
+      aspect-ratio: 9 / 16;
+      max-width: min(100%, 280px);
+      margin: 0 auto;
+    }
+    .hero-fallback {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .hero-fallback[hidden],
+    .hero-thumb[hidden] { display: none !important; }
+    .hero-fallback svg { width: 48px; height: 48px; color: var(--text-sub); }
+    h1 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      margin: 14px 0 8px;
+      line-height: 1.4;
+      overflow-wrap: break-word;
+      word-break: normal;
+    }
+    .sub {
+      color: var(--text-sub);
+      font-size: 0.9rem;
+      margin: 0 0 8px;
+    }
+    .badge {
+      display: inline-block;
+      margin: 0 0 12px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 999px;
+      padding: 2px 8px;
+    }
+    .ad-slot {
+      margin: 18px 0;
+      min-height: 120px;
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-sub);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      background: var(--bg-elev);
+    }
+    .yt-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      min-height: 56px;
+      margin: 4px 0 0;
+      font: inherit;
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: #fff;
+      background: var(--yt);
+      border: 0;
+      border-radius: 12px;
+      text-decoration: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .yt-btn svg {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+    }
+    .yt-btn:focus {
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
+    }
+    .yt-btn:active { opacity: 0.9; }
+    .related {
+      margin-top: 32px;
+    }
+    .related h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin: 0 0 12px;
+    }
+    .list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px 10px;
+    }
+    .item a {
+      display: block;
+      color: inherit;
+      text-decoration: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .item a:active { opacity: 0.75; }
+    .thumb,
+    .thumb-fallback {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      border-radius: 12px;
+      background: var(--thumb-bg);
+      object-fit: cover;
+      display: block;
+    }
+    .item.is-short .thumb,
+    .item.is-short .thumb-fallback { aspect-ratio: 9 / 16; }
+    .thumb-fallback {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .thumb-fallback[hidden],
+    .thumb[hidden] { display: none !important; }
+    .thumb-fallback svg { width: 28px; height: 28px; }
+    .meta { padding: 8px 2px 0; }
+    .title {
+      font-weight: 650;
+      font-size: 0.88rem;
+      line-height: 1.35;
+      margin: 0 0 4px;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .card-sub {
+      color: var(--text-sub);
+      font-size: 0.75rem;
+      margin: 0;
+    }
+    .item .badge { margin: 4px 0 0; }
+    @media (max-width: 360px) {
+      :root { --pad: 12px; }
+      h1 { font-size: 1.1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <p class="back"><a id="back" href="index.html">← 検索に戻る</a></p>
+    <div id="status" class="msg" role="status">データを読み込んでいます…</div>
+    <article id="detail" hidden>
+      <div class="hero" id="hero">
+        <img class="hero-thumb" id="thumb" alt="" decoding="async">
+        <span class="hero-fallback" hidden aria-hidden="true">
+          <svg viewBox="0 0 28 28" focusable="false">
+            <circle cx="14" cy="14" r="13" fill="currentColor" opacity="0.2"/>
+            <polygon points="11,8 21,14 11,20" fill="currentColor"/>
+          </svg>
+        </span>
+      </div>
+      <h1 id="title"></h1>
+      <p class="sub" id="sub"></p>
+      <span class="badge" id="badge" hidden>ショート</span>
+
+      <!-- 広告スニペットをここに貼り付け（AdSense など） -->
+      <div class="ad-slot" aria-label="広告スペース">広告スペース</div>
+
+      <a class="yt-btn" id="yt" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31.5 31.5 0 0 0 0 12a31.5 31.5 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.5 31.5 0 0 0 24 12a31.5 31.5 0 0 0-.5-5.8zM9.8 15.5V8.5l6.3 3.5-6.3 3.5z"/></svg>
+        YouTubeで見る
+      </a>
+
+      <section class="related" id="related-section" hidden>
+        <h2>同じチャンネルの人気動画</h2>
+        <ul class="list" id="related"></ul>
+      </section>
+
+      <!-- 広告スニペットをここに貼り付け（AdSense など） -->
+      <div class="ad-slot" aria-label="広告スペース">広告スペース</div>
+    </article>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var elStatus = document.getElementById("status");
+      var elDetail = document.getElementById("detail");
+      var elBack = document.getElementById("back");
+
+      elBack.addEventListener("click", function (e) {
+        var ref = document.referrer;
+        if (!ref) return;
+        try {
+          if (new URL(ref).origin === location.origin) {
+            e.preventDefault();
+            history.back();
+          }
+        } catch (err) {}
+      });
+
+      function formatViews(n) {
+        if (n >= 100000000) {
+          var oku = n / 100000000;
+          var os = oku >= 10 ? oku.toFixed(0) : oku.toFixed(1).replace(/\.0$/, "");
+          return os + "億回";
+        }
+        if (n >= 10000) {
+          var man = n / 10000;
+          var ms = man >= 10 ? man.toFixed(0) : man.toFixed(1).replace(/\.0$/, "");
+          return ms + "万回";
+        }
+        return n.toLocaleString("ja-JP") + "回";
+      }
+
+      function escapeHtml(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function youtubeUrl(id, isShort) {
+        return isShort
+          ? "https://www.youtube.com/shorts/" + id
+          : "https://www.youtube.com/watch?v=" + id;
+      }
+
+      function thumbHtml(v) {
+        var src = "https://i.ytimg.com/vi/" + encodeURIComponent(v.id) + "/hqdefault.jpg";
+        return (
+          '<img class="thumb" src="' + src + '" alt="" loading="lazy" decoding="async">' +
+          '<span class="thumb-fallback" hidden aria-hidden="true">' +
+            '<svg viewBox="0 0 28 28" focusable="false">' +
+              '<circle cx="14" cy="14" r="13" fill="currentColor" opacity="0.2"/>' +
+              '<polygon points="11,8 21,14 11,20" fill="currentColor"/>' +
+            "</svg>" +
+          "</span>"
+        );
+      }
+
+      function bindThumbErrors(root) {
+        var imgs = root.querySelectorAll("img.thumb, img.hero-thumb");
+        for (var t = 0; t < imgs.length; t++) {
+          imgs[t].addEventListener("error", function () {
+            this.setAttribute("hidden", "");
+            if (this.nextElementSibling) this.nextElementSibling.removeAttribute("hidden");
+          });
+        }
+      }
+
+      function showMessage(text, isError) {
+        elDetail.hidden = true;
+        elStatus.hidden = false;
+        elStatus.className = isError ? "msg error" : "msg";
+        elStatus.textContent = text;
+      }
+
+      var params = new URLSearchParams(location.search);
+      var id = (params.get("id") || "").trim();
+      if (!id) {
+        document.title = "動画が見つかりません | 映画まとめ動画検索";
+        showMessage("この動画は見つかりませんでした。検索に戻って、別の動画を探してみてください。", false);
+        return;
+      }
+
+      fetch("data.json")
+        .then(function (res) {
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          return res.json();
+        })
+        .then(function (data) {
+          var channels = data.channels || [];
+          var rows = data.videos || [];
+          var videos = new Array(rows.length);
+          var found = null;
+          for (var i = 0; i < rows.length; i++) {
+            var r = rows[i];
+            var isShort = r[3] === 1 || r[3] === true;
+            var v = {
+              id: r[0],
+              title: r[1],
+              ch: r[2],
+              short: isShort,
+              views: typeof r[4] === "number" ? r[4] : -1
+            };
+            videos[i] = v;
+            if (v.id === id) found = v;
+          }
+
+          if (!found) {
+            document.title = "動画が見つかりません | 映画まとめ動画検索";
+            showMessage("この動画は見つかりませんでした。検索に戻って、別の動画を探してみてください。", false);
+            return;
+          }
+
+          var chName = channels[found.ch] || "";
+          document.title = found.title + " | 映画まとめ動画検索";
+          var meta = document.querySelector('meta[name="description"]');
+          if (meta) {
+            meta.setAttribute(
+              "content",
+              found.title + (chName ? "｜" + chName : "") + "の動画です。"
+            );
+          }
+
+          var hero = document.getElementById("hero");
+          var thumb = document.getElementById("thumb");
+          if (found.short) hero.classList.add("is-short");
+          thumb.src = "https://i.ytimg.com/vi/" + encodeURIComponent(found.id) + "/hqdefault.jpg";
+          thumb.alt = found.title;
+
+          document.getElementById("title").textContent = found.title;
+          var sub = chName;
+          if (found.views >= 0) {
+            sub += (sub ? " · " : "") + formatViews(found.views);
+          }
+          document.getElementById("sub").textContent = sub;
+          document.getElementById("badge").hidden = !found.short;
+
+          var yt = document.getElementById("yt");
+          yt.href = youtubeUrl(found.id, found.short);
+
+          var related = [];
+          for (var j = 0; j < videos.length; j++) {
+            if (videos[j].ch === found.ch && videos[j].id !== found.id) {
+              related.push(videos[j]);
+            }
+          }
+          related.sort(function (a, b) { return b.views - a.views; });
+          related = related.slice(0, 6);
+
+          var relSection = document.getElementById("related-section");
+          var relList = document.getElementById("related");
+          if (related.length) {
+            var html = "";
+            for (var k = 0; k < related.length; k++) {
+              var rv = related[k];
+              var rsub = "";
+              if (rv.views >= 0) rsub = formatViews(rv.views);
+              html +=
+                '<li class="item' + (rv.short ? " is-short" : "") + '"><a href="video.html?id=' +
+                encodeURIComponent(rv.id) +
+                '">' +
+                thumbHtml(rv) +
+                '<div class="meta"><p class="title">' +
+                escapeHtml(rv.title) +
+                "</p>" +
+                (rsub ? '<p class="card-sub">' + escapeHtml(rsub) + "</p>" : "") +
+                (rv.short ? '<span class="badge">ショート</span>' : "") +
+                "</div></a></li>";
+            }
+            relList.innerHTML = html;
+            relSection.hidden = false;
+          }
+
+          elStatus.hidden = true;
+          elDetail.hidden = false;
+          bindThumbErrors(document);
+        })
+        .catch(function () {
+          showMessage("データの読み込みに失敗しました。ページを開き直すか、通信環境を確認してください。", true);
+        });
+    })();
+  </script>
+</body>
+</html>

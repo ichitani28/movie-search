@@ -404,12 +404,6 @@
         return n.toLocaleString("ja-JP") + "回";
       }
 
-      function youtubeUrl(id, isShort) {
-        return isShort
-          ? "https://www.youtube.com/shorts/" + id
-          : "https://www.youtube.com/watch?v=" + id;
-      }
-
       function escapeHtml(s) {
         return String(s)
           .replace(/&/g, "&amp;")
@@ -480,14 +474,14 @@
         var html = "";
         for (var i = 0; i < shown.length; i++) {
           var v = shown[i];
-          var href = youtubeUrl(v.id, v.short);
+          var href = "video.html?id=" + encodeURIComponent(v.id);
           var chName = channels[v.ch] || "";
           var sub = chName;
           if (v.views >= 0) sub += " · " + formatViews(v.views);
           html +=
             '<li class="item' + (v.short ? ' is-short' : '') + '"><a href="' +
             escapeHtml(href) +
-            '" target="_blank" rel="noopener noreferrer">' +
+            '">' +
             thumbHtml(v) +
             '<div class="meta"><p class="title">' +
             escapeHtml(v.title) +
