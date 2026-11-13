@@ -244,7 +244,10 @@
       align-items: center;
       justify-content: center;
     }
+    .thumb-fallback[hidden], .thumb[hidden] { display: none !important; }
     .thumb-fallback svg { width: 28px; height: 28px; }
+    html, body { overflow-x: hidden; }
+    .title { overflow-wrap: anywhere; word-break: break-word; }
     .meta { min-width: 0; flex: 1; }
     .title {
       font-weight: 650;
