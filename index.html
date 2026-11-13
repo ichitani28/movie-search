@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)">
   <meta name="theme-color" content="#f6f4f0" media="(prefers-color-scheme: light)">
-  <meta name="description" content="登録7チャンネルの映画まとめ動画を、タイトルで検索できます。">
+  <meta name="description" content="登録8チャンネルの映画まとめ動画を、タイトルで検索できます。">
   <title>映画まとめ動画検索</title>
   <style>
     :root {
@@ -313,19 +313,112 @@
     .title { font-size: 0.88rem; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
     .sub { font-size: 0.75rem; }
     .badge { margin-top: 4px; }
+
+    /* registered channel grid */
+    .channels-panel {
+      background: color-mix(in srgb, var(--accent) 16%, var(--bg-elev));
+      border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border));
+      border-radius: var(--radius);
+      padding: 14px;
+      margin: 0 0 16px;
+    }
+    .channels-panel h2 {
+      margin: 0;
+      font-size: 1.05rem;
+    }
+    .channels-lede {
+      margin: 4px 0 12px;
+      color: var(--text-sub);
+      font-size: 0.8rem;
+      line-height: 1.45;
+    }
+    .channel-grid {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .channel-card {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 10px 8px;
+    }
+    .channel-card.is-active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+    .channel-pick {
+      display: grid;
+      gap: 2px;
+      width: 100%;
+      min-height: 44px;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: none;
+      font: inherit;
+      color: inherit;
+      text-align: left;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .channel-pick:focus-visible,
+    .channel-yt:focus-visible {
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
+    }
+    .channel-pick:active { opacity: 0.75; }
+    .channel-name {
+      font-weight: 700;
+      font-size: 0.82rem;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .channel-count {
+      color: var(--text-sub);
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .channel-yt {
+      align-self: flex-start;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-decoration: none;
+      padding: 2px 0;
+    }
+    .channel-yt:active { opacity: 0.75; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
       <h1>映画まとめ動画検索</h1>
-      <p class="lede">登録している7チャンネルのまとめ動画を、タイトルの一部で検索できます。最初はショート動画を先頭に並べています。</p>
+      <p class="lede">登録している8チャンネルのまとめ動画を、タイトルの一部で検索できます。最初はショート動画を先頭に並べています。上の一覧からチャンネルを選べます。</p>
       <div class="metrics" aria-label="登録数">
         <div class="metric"><b id="stat-total">—</b><span>登録動画</span></div>
         <div class="metric"><b id="stat-shorts">—</b><span>ショート</span></div>
-        <div class="metric"><b id="stat-channels">7</b><span>チャンネル</span></div>
+        <div class="metric"><b id="stat-channels">8</b><span>チャンネル</span></div>
       </div>
     </header>
+
+    <section class="channels-panel" aria-labelledby="channel-list-heading">
+      <h2 id="channel-list-heading">登録チャンネル一覧</h2>
+      <p class="channels-lede">名前を押すと、そのチャンネルの動画だけ表示します。もう一度押すと、すべてのチャンネルに戻ります。</p>
+      <ul class="channel-grid" id="channel-grid"></ul>
+    </section>
 
     <section class="filters" aria-label="検索条件">
       <label class="field">タイトル
@@ -370,6 +463,8 @@
       var elResults = document.getElementById("results");
       var elMore = document.getElementById("more");
       var elCount = document.getElementById("result-count");
+      var elGrid = document.getElementById("channel-grid");
+      var channelUrls = [];
 
       function normalize(s) {
         var t = (s || "").normalize("NFKC").toLowerCase();
@@ -410,6 +505,68 @@
           .replace(/</g, "&lt;")
           .replace(/>/g, "&gt;")
           .replace(/"/g, "&quot;");
+      }
+
+
+      function syncChannelCards() {
+        if (!elGrid) return;
+        var cards = elGrid.querySelectorAll(".channel-card");
+        for (var i = 0; i < cards.length; i++) {
+          var on = cards[i].getAttribute("data-ch") === elCh.value;
+          if (on) cards[i].classList.add("is-active");
+          else cards[i].classList.remove("is-active");
+          var btn = cards[i].querySelector(".channel-pick");
+          if (btn) btn.setAttribute("aria-pressed", on ? "true" : "false");
+        }
+      }
+
+      function renderChannelGrid() {
+        if (!elGrid) return;
+        var counts = [];
+        for (var i = 0; i < channels.length; i++) counts[i] = 0;
+        for (var v = 0; v < videos.length; v++) {
+          var idx = videos[v].ch;
+          if (idx >= 0 && idx < counts.length) counts[idx]++;
+        }
+        var html = "";
+        for (var c = 0; c < channels.length; c++) {
+          var name = channels[c] || "";
+          var url = channelUrls[c] || "";
+          html +=
+            '<li class="channel-card" data-ch="' +
+            c +
+            '"><button type="button" class="channel-pick" data-ch="' +
+            c +
+            '" aria-pressed="false"><span class="channel-name">' +
+            escapeHtml(name) +
+            '</span><span class="channel-count">' +
+            formatCount(counts[c] || 0) +
+            "本</span></button>";
+          if (url) {
+            html +=
+              '<a class="channel-yt" href="' +
+              escapeHtml(url) +
+              '" target="_blank" rel="noopener noreferrer">YouTubeで見る</a>';
+          }
+          html += "</li>";
+        }
+        elGrid.innerHTML = html;
+        elGrid.addEventListener("click", function (ev) {
+          var btn = ev.target.closest(".channel-pick");
+          if (!btn || !elGrid.contains(btn)) return;
+          var ch = btn.getAttribute("data-ch");
+          if (elCh.value === ch) {
+            elCh.value = "all";
+          } else {
+            elCh.value = ch;
+          }
+          resetAndRender();
+          var row = document.querySelector(".status-row");
+          if (row && row.scrollIntoView) {
+            row.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        });
+        syncChannelCards();
       }
 
       function currentFilters() {
@@ -513,6 +670,7 @@
       function resetAndRender() {
         limit = PAGE_SIZE;
         render();
+        syncChannelCards();
       }
 
       elQ.addEventListener("input", resetAndRender);
@@ -551,18 +709,27 @@
           var elChStat = document.getElementById("stat-channels");
           if (elChStat) elChStat.textContent = formatCount(channels.length);
 
+          channelUrls = data.channelUrls || [];
+          if (!channelUrls.length && data.channelIds) {
+            channelUrls = [];
+            for (var u = 0; u < data.channelIds.length; u++) {
+              channelUrls.push("https://www.youtube.com/channel/" + data.channelIds[u]);
+            }
+          }
+
           for (var c = 0; c < channels.length; c++) {
             var opt = document.createElement("option");
             opt.value = String(c);
             opt.textContent = channels[c];
             elCh.appendChild(opt);
           }
+          renderChannelGrid();
 
           var note = document.getElementById("footnote");
           var when = data.generatedAtLabel || "";
           note.textContent =
             (when ? when + "時点の、" : "") +
-            "YouTube公開アップロード一覧です。視聴回数はほぼすべての動画で取得できましたが、投稿日は一覧に含まれていません。映画カルチュア FilmIsNow Japanは公開一覧の11,477本を収録しています（以前のチャンネル総数11,540本より63本少ない）。ほかの6チャンネルは総数と一致しています。";
+            "YouTube公開アップロード一覧です。視聴回数はほぼすべての動画で取得できましたが、投稿日は一覧に含まれていません。映画カルチュア FilmIsNow Japanは公開一覧の11,477本を収録しています（以前のチャンネル総数11,540本より63本少ない）。ほかの7チャンネルは総数と一致しています。";
 
           render();
         })
