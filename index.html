@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f6f4f0" media="(prefers-color-scheme: light)">
+  <meta name="description" content="登録6チャンネルの映画まとめ動画を、タイトルで検索できます。">
+  <title>映画まとめ動画検索</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f6f4f0;
+      --bg-elev: #ffffff;
+      --text: #1a1916;
+      --text-sub: #5c5850;
+      --border: #e2ddd4;
+      --accent: #0b6e4f;
+      --accent-text: #ffffff;
+      --danger: #a33b2a;
+      --thumb-bg: #e8e4dc;
+      --focus: #0b6e4f;
+      --radius: 12px;
+      --pad: 16px;
+      --thumb-w: 120px;
+      --thumb-h: 68px;
+      --font: system-ui, -apple-system, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #111111;
+        --bg-elev: #1c1c1c;
+        --text: #f3f1ec;
+        --text-sub: #b4afa6;
+        --border: #2e2c28;
+        --accent: #3dba8b;
+        --accent-text: #08150f;
+        --danger: #f0a090;
+        --thumb-bg: #2a2824;
+        --focus: #3dba8b;
+      }
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-text-size-adjust: 100%;
+    }
+    body {
+      min-height: 100dvh;
+      padding: 20px var(--pad) 48px;
+      padding-left: max(var(--pad), env(safe-area-inset-left));
+      padding-right: max(var(--pad), env(safe-area-inset-right));
+    }
+    .wrap {
+      max-width: 40rem;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      margin: 0 0 8px;
+      line-height: 1.3;
+    }
+    .lede {
+      margin: 0 0 16px;
+      color: var(--text-sub);
+      font-size: 0.95rem;
+    }
+    .metrics {
+      display: flex;
+      gap: 8px;
+      margin: 0 0 20px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .metric {
+      flex: 1 1 0;
+      min-width: 88px;
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+    }
+    .metric b {
+      display: block;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+    .metric span {
+      display: block;
+      color: var(--text-sub);
+      font-size: 0.75rem;
+      margin-top: 2px;
+    }
+    .filters {
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    label.field {
+      display: grid;
+      gap: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-sub);
+    }
+    input[type="search"],
+    select {
+      width: 100%;
+      min-height: 48px;
+      font: inherit;
+      font-size: 16px;
+      font-weight: 400;
+      color: var(--text);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      appearance: none;
+    }
+    select {
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='%235c5850' d='M1 1l5 5 5-5'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+    }
+    input[type="search"]:focus,
+    select:focus,
+    .toggle:focus-within {
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
+    }
+    .toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 48px;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+    }
+    .toggle input {
+      position: absolute;
+      opacity: 0;
+      width: 1px;
+      height: 1px;
+    }
+    .switch {
+      flex: 0 0 auto;
+      width: 52px;
+      height: 32px;
+      border-radius: 999px;
+      background: var(--border);
+      position: relative;
+      transition: background 0.15s ease;
+    }
+    .switch::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--bg-elev);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+      transition: transform 0.15s ease;
+    }
+    .toggle input:checked + .switch {
+      background: var(--accent);
+    }
+    .toggle input:checked + .switch::after {
+      transform: translateX(20px);
+    }
+    .status-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 0 0 8px;
+    }
+    .status-row h2 {
+      margin: 0;
+      font-size: 1.05rem;
+    }
+    .count {
+      color: var(--text-sub);
+      font-size: 0.85rem;
+    }
+    .msg {
+      padding: 20px 4px;
+      color: var(--text-sub);
+    }
+    .msg.error { color: var(--danger); }
+    .list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .item {
+      border-bottom: 1px solid var(--border);
+    }
+    .item a {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 12px 0;
+      min-height: 92px;
+      color: inherit;
+      text-decoration: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .item a:active {
+      opacity: 0.75;
+    }
+    .thumb {
+      width: var(--thumb-w);
+      height: var(--thumb-h);
+      flex: 0 0 var(--thumb-w);
+      border-radius: 8px;
+      background: var(--thumb-bg);
+      object-fit: cover;
+      display: block;
+    }
+    .thumb-fallback {
+      width: var(--thumb-w);
+      height: var(--thumb-h);
+      flex: 0 0 var(--thumb-w);
+      border-radius: 8px;
+      background: var(--thumb-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .thumb-fallback svg { width: 28px; height: 28px; }
+    .meta { min-width: 0; flex: 1; }
+    .title {
+      font-weight: 650;
+      font-size: 0.95rem;
+      line-height: 1.4;
+      margin: 0 0 4px;
+    }
+    .sub {
+      color: var(--text-sub);
+      font-size: 0.8rem;
+      margin: 0;
+    }
+    .badge {
+      display: inline-block;
+      margin-top: 6px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 999px;
+      padding: 2px 8px;
+    }
+    .more {
+      width: 100%;
+      min-height: 52px;
+      margin-top: 16px;
+      font: inherit;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--accent-text);
+      background: var(--accent);
+      border: 0;
+      border-radius: 12px;
+      cursor: pointer;
+      padding: 12px 16px;
+    }
+    .more:focus {
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
+    }
+    .more:active { opacity: 0.9; }
+    footer {
+      margin-top: 32px;
+      color: var(--text-sub);
+      font-size: 0.78rem;
+      line-height: 1.6;
+    }
+    @media (max-width: 360px) {
+      :root { --thumb-w: 108px; --thumb-h: 61px; --pad: 12px; }
+      h1 { font-size: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>映画まとめ動画検索</h1>
+      <p class="lede">登録している6チャンネルのまとめ動画を、タイトルの一部で検索できます。最初はショート動画を先頭に並べています。</p>
+      <div class="metrics" aria-label="登録数">
+        <div class="metric"><b id="stat-total">—</b><span>登録動画</span></div>
+        <div class="metric"><b id="stat-shorts">—</b><span>ショート</span></div>
+        <div class="metric"><b>6</b><span>チャンネル</span></div>
+      </div>
+    </header>
+
+    <section class="filters" aria-label="検索条件">
+      <label class="field">タイトル
+        <input type="search" id="q" placeholder="作品名の一部（例：ゴジラ、トップガン）" autocomplete="off" enterkeyhint="search">
+      </label>
+      <label class="field">チャンネル
+        <select id="channel">
+          <option value="all">すべてのチャンネル</option>
+        </select>
+      </label>
+      <label class="toggle">
+        ショートのみ
+        <input type="checkbox" id="shorts-only">
+        <span class="switch" aria-hidden="true"></span>
+      </label>
+    </section>
+
+    <div class="status-row">
+      <h2>検索結果</h2>
+      <p class="count" id="result-count"></p>
+    </div>
+    <div id="status" class="msg" role="status">データを読み込んでいます…</div>
+    <ul class="list" id="results"></ul>
+    <button type="button" class="more" id="more" hidden>もっと見る</button>
+
+    <footer id="footnote"></footer>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var PAGE_SIZE = 50;
+      var channels = [];
+      var videos = []; // {id, title, ch, short, views, norm}
+      var limit = PAGE_SIZE;
+
+      var elQ = document.getElementById("q");
+      var elCh = document.getElementById("channel");
+      var elShorts = document.getElementById("shorts-only");
+      var elStatus = document.getElementById("status");
+      var elResults = document.getElementById("results");
+      var elMore = document.getElementById("more");
+      var elCount = document.getElementById("result-count");
+
+      function normalize(s) {
+        var t = (s || "").normalize("NFKC").toLowerCase();
+        var out = "";
+        for (var i = 0; i < t.length; i++) {
+          var c = t.codePointAt(i);
+          if (c >= 0x30a1 && c <= 0x30f6) {
+            out += String.fromCodePoint(c - 0x60);
+          } else {
+            out += String.fromCodePoint(c);
+          }
+          if (c > 0xffff) i++;
+        }
+        return out.replace(/\s+/g, " ").trim();
+      }
+
+      function formatCount(n) {
+        return n.toLocaleString("ja-JP");
+      }
+
+      function formatViews(n) {
+        if (n >= 100000000) {
+          var oku = n / 100000000;
+          var os = oku >= 10 ? oku.toFixed(0) : oku.toFixed(1).replace(/\.0$/, "");
+          return os + "億回";
+        }
+        if (n >= 10000) {
+          var man = n / 10000;
+          var ms = man >= 10 ? man.toFixed(0) : man.toFixed(1).replace(/\.0$/, "");
+          return ms + "万回";
+        }
+        return n.toLocaleString("ja-JP") + "回";
+      }
+
+      function youtubeUrl(id, isShort) {
+        return isShort
+          ? "https://www.youtube.com/shorts/" + id
+          : "https://www.youtube.com/watch?v=" + id;
+      }
+
+      function escapeHtml(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function currentFilters() {
+        var tokens = normalize(elQ.value)
+          .split(" ")
+          .map(function (t) { return t.trim(); })
+          .filter(Boolean);
+        var ch = elCh.value;
+        var shortsOnly = elShorts.checked;
+        var out = [];
+        for (var i = 0; i < videos.length; i++) {
+          var v = videos[i];
+          if (shortsOnly && !v.short) continue;
+          if (ch !== "all" && String(v.ch) !== ch) continue;
+          if (tokens.length) {
+            var ok = true;
+            for (var j = 0; j < tokens.length; j++) {
+              if (v.norm.indexOf(tokens[j]) === -1) {
+                ok = false;
+                break;
+              }
+            }
+            if (!ok) continue;
+          }
+          out.push(v);
+        }
+        return out;
+      }
+
+      function thumbHtml(v) {
+        var src = "https://i.ytimg.com/vi/" + encodeURIComponent(v.id) + "/mqdefault.jpg";
+        return (
+          '<img class="thumb" src="' + src + '" alt="" width="120" height="68" loading="lazy" decoding="async">' +
+          '<span class="thumb-fallback" hidden aria-hidden="true">' +
+            '<svg viewBox="0 0 28 28" focusable="false">' +
+              '<circle cx="14" cy="14" r="13" fill="currentColor" opacity="0.2"/>' +
+              '<polygon points="11,8 21,14 11,20" fill="currentColor"/>' +
+            "</svg>" +
+          "</span>"
+        );
+      }
+
+      function render() {
+        if (!videos.length) return;
+        var matched = currentFilters();
+        var shown = matched.slice(0, limit);
+        var remaining = matched.length - shown.length;
+
+        elCount.textContent =
+          formatCount(matched.length) + "件中 " + formatCount(shown.length) + "件を表示";
+
+        if (matched.length === 0) {
+          elStatus.hidden = false;
+          elStatus.className = "msg";
+          elStatus.textContent = "一致する動画はありません。言葉を短くするか、チャンネル指定を外してみてください。";
+          elResults.innerHTML = "";
+          elMore.hidden = true;
+          return;
+        }
+
+        elStatus.hidden = true;
+        var html = "";
+        for (var i = 0; i < shown.length; i++) {
+          var v = shown[i];
+          var href = youtubeUrl(v.id, v.short);
+          var chName = channels[v.ch] || "";
+          var sub = chName;
+          if (v.views >= 0) sub += " · " + formatViews(v.views);
+          html +=
+            '<li class="item"><a href="' +
+            escapeHtml(href) +
+            '" target="_blank" rel="noopener noreferrer">' +
+            thumbHtml(v) +
+            '<div class="meta"><p class="title">' +
+            escapeHtml(v.title) +
+            '</p><p class="sub">' +
+            escapeHtml(sub) +
+            "</p>" +
+            (v.short ? '<span class="badge">ショート</span>' : "") +
+            "</div></a></li>";
+        }
+        elResults.innerHTML = html;
+        var imgs = elResults.querySelectorAll("img.thumb");
+        for (var t = 0; t < imgs.length; t++) {
+          imgs[t].addEventListener("error", function () {
+            this.style.display = "none";
+            if (this.nextElementSibling) this.nextElementSibling.removeAttribute("hidden");
+          });
+        }
+
+        if (remaining > 0) {
+          elMore.hidden = false;
+          var next = Math.min(PAGE_SIZE, remaining);
+          elMore.textContent =
+            "もっと見る（さらに" + formatCount(next) + "件 / 残り" + formatCount(remaining) + "件）";
+        } else {
+          elMore.hidden = true;
+        }
+      }
+
+      function resetAndRender() {
+        limit = PAGE_SIZE;
+        render();
+      }
+
+      elQ.addEventListener("input", resetAndRender);
+      elCh.addEventListener("change", resetAndRender);
+      elShorts.addEventListener("change", resetAndRender);
+      elMore.addEventListener("click", function () {
+        limit += PAGE_SIZE;
+        render();
+      });
+
+      fetch("data.json")
+        .then(function (res) {
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          return res.json();
+        })
+        .then(function (data) {
+          channels = data.channels || [];
+          var rows = data.videos || [];
+          videos = new Array(rows.length);
+          var shortCount = 0;
+          for (var i = 0; i < rows.length; i++) {
+            var r = rows[i];
+            var isShort = r[3] === 1 || r[3] === true;
+            if (isShort) shortCount++;
+            videos[i] = {
+              id: r[0],
+              title: r[1],
+              ch: r[2],
+              short: isShort,
+              views: typeof r[4] === "number" ? r[4] : -1,
+              norm: normalize(r[1])
+            };
+          }
+          document.getElementById("stat-total").textContent = formatCount(videos.length);
+          document.getElementById("stat-shorts").textContent = formatCount(shortCount);
+
+          for (var c = 0; c < channels.length; c++) {
+            var opt = document.createElement("option");
+            opt.value = String(c);
+            opt.textContent = channels[c];
+            elCh.appendChild(opt);
+          }
+
+          var note = document.getElementById("footnote");
+          var when = data.generatedAtLabel || "";
+          note.textContent =
+            (when ? when + "時点の、" : "") +
+            "YouTube公開アップロード一覧です。視聴回数はほぼすべての動画で取得できましたが、投稿日は一覧に含まれていません。映画カルチュア FilmIsNow Japanは公開一覧の11,477本を収録しています（以前のチャンネル総数11,540本より63本少ない）。ほかの5チャンネルは総数と一致しています。";
+
+          render();
+        })
+        .catch(function () {
+          elStatus.hidden = false;
+          elStatus.className = "msg error";
+          elStatus.textContent = "データの読み込みに失敗しました。ページを開き直すか、通信環境を確認してください。";
+        });
+    })();
+  </script>
+</body>
+</html>
