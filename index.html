@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)">
   <meta name="theme-color" content="#f6f4f0" media="(prefers-color-scheme: light)">
-  <meta name="description" content="登録9チャンネルの映画まとめ動画を、タイトルで検索できます。">
+  <meta name="description" content="登録9チャンネルの映画まとめ動画を、タイトルで検索できます。再生回数・いいね・新着などのランキングも掲載。">
   <title>映画まとめ動画検索</title>
   <style>
     :root {
@@ -25,6 +25,12 @@
       --thumb-w: 120px;
       --thumb-h: 68px;
       --font: system-ui, -apple-system, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", sans-serif;
+      --gold: #e8c547;
+      --gold-text: #3a2e00;
+      --silver: #c5c8ce;
+      --silver-text: #2a2c30;
+      --bronze: #d4925a;
+      --bronze-text: #3a220e;
     }
     @media (prefers-color-scheme: dark) {
       :root {
@@ -38,6 +44,12 @@
         --danger: #f0a090;
         --thumb-bg: #2a2824;
         --focus: #3dba8b;
+        --gold: #f0d36a;
+        --gold-text: #2a2200;
+        --silver: #d0d3d8;
+        --silver-text: #1c1e22;
+        --bronze: #e0a370;
+        --bronze-text: #2a1808;
       }
     }
     * { box-sizing: border-box; }
@@ -108,6 +120,14 @@
       gap: 12px;
       margin-bottom: 16px;
     }
+    .filters-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    @media (min-width: 560px) {
+      .filters-row { grid-template-columns: 1fr 1fr; }
+    }
     label.field {
       display: grid;
       gap: 6px;
@@ -137,7 +157,8 @@
     }
     input[type="search"]:focus,
     select:focus,
-    .toggle:focus-within {
+    .toggle:focus-within,
+    .rank-tabs button:focus-visible {
       outline: 2px solid var(--focus);
       outline-offset: 2px;
     }
@@ -259,6 +280,15 @@
       color: var(--text-sub);
       font-size: 0.8rem;
       margin: 0;
+    }
+    .stats-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px 8px;
+      color: var(--text-sub);
+      font-size: 0.72rem;
+      margin: 2px 0 0;
+      line-height: 1.4;
     }
     .badge {
       display: inline-block;
@@ -400,13 +430,135 @@
       padding: 2px 0;
     }
     .channel-yt:active { opacity: 0.75; }
+
+    /* rankings */
+    .rank-panel {
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 0 10px;
+      margin: 0 0 16px;
+    }
+    .rank-panel h2 {
+      margin: 0 14px 8px;
+      font-size: 1.05rem;
+    }
+    .rank-tabs {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      margin: 0;
+      padding: 0 14px 8px;
+    }
+    .rank-tabs::-webkit-scrollbar { display: none; }
+    .rank-tabs button {
+      flex: 0 0 auto;
+      min-height: 36px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font: inherit;
+      font-size: 0.8rem;
+      font-weight: 700;
+      white-space: nowrap;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .rank-tabs button[aria-selected="true"] {
+      background: var(--accent);
+      color: var(--accent-text);
+      border-color: var(--accent);
+    }
+    .rank-tabs button:active { opacity: 0.8; }
+    .rank-desc {
+      margin: 0 14px 10px;
+      color: var(--text-sub);
+      font-size: 0.75rem;
+      line-height: 1.45;
+    }
+    .rank-scroller {
+      list-style: none;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      margin: 0;
+      padding: 0 14px 6px;
+    }
+    .rank-card {
+      flex: 0 0 148px;
+      scroll-snap-align: start;
+      min-width: 0;
+    }
+    .rank-card a {
+      display: block;
+      color: inherit;
+      text-decoration: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .rank-card a:active { opacity: 0.75; }
+    .rank-thumb-wrap {
+      position: relative;
+    }
+    .rank-card .thumb,
+    .rank-card .thumb-fallback {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 10px;
+    }
+    .rank-no {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.72rem;
+      background: rgba(20, 20, 18, 0.72);
+      color: #fff;
+      line-height: 1;
+    }
+    .rank-card.is-gold .rank-no { background: var(--gold); color: var(--gold-text); }
+    .rank-card.is-silver .rank-no { background: var(--silver); color: var(--silver-text); }
+    .rank-card.is-bronze .rank-no { background: var(--bronze); color: var(--bronze-text); }
+    .rank-card .rank-title {
+      font-weight: 700;
+      font-size: 0.78rem;
+      line-height: 1.35;
+      margin: 6px 0 2px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .rank-card .rank-sub {
+      color: var(--text-sub);
+      font-size: 0.7rem;
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
       <h1>映画まとめ動画検索</h1>
-      <p class="lede">登録している9チャンネルのまとめ動画を、タイトルの一部で検索できます。最初はショート動画を先頭に並べています。上の一覧からチャンネルを選べます。</p>
+      <p class="lede">登録している9チャンネルのまとめ動画を、タイトルの一部で検索できます。再生回数やいいね、新着などのランキングも見られます。上の一覧からチャンネルを選べます。</p>
       <div class="metrics" aria-label="登録数">
         <div class="metric"><b id="stat-total">—</b><span>登録動画</span></div>
         <div class="metric"><b id="stat-shorts">—</b><span>ショート</span></div>
@@ -424,16 +576,40 @@
       <label class="field">タイトル
         <input type="search" id="q" placeholder="作品名の一部（例：ゴジラ、トップガン）" autocomplete="off" enterkeyhint="search">
       </label>
-      <label class="field">チャンネル
-        <select id="channel">
-          <option value="all">すべてのチャンネル</option>
-        </select>
-      </label>
+      <div class="filters-row">
+        <label class="field">チャンネル
+          <select id="channel">
+            <option value="all">すべてのチャンネル</option>
+          </select>
+        </label>
+        <label class="field">並び順
+          <select id="sort">
+            <option value="views">再生数</option>
+            <option value="likes">いいね数</option>
+            <option value="newest">新着</option>
+            <option value="likeRate">いいね率</option>
+          </select>
+        </label>
+      </div>
       <label class="toggle">
         ショートのみ
         <input type="checkbox" id="shorts-only">
         <span class="switch" aria-hidden="true"></span>
       </label>
+    </section>
+
+    <section class="rank-panel" aria-labelledby="rank-heading">
+      <h2 id="rank-heading">ランキング</h2>
+      <div class="rank-tabs" id="rank-tabs" role="tablist" aria-label="ランキングの種類">
+        <button type="button" role="tab" id="tab-views" aria-selected="true" data-rank="views">総合再生数</button>
+        <button type="button" role="tab" id="tab-likes" aria-selected="false" data-rank="likes">いいね数</button>
+        <button type="button" role="tab" id="tab-likeRate" aria-selected="false" data-rank="likeRate">隠れた名作</button>
+        <button type="button" role="tab" id="tab-newest" aria-selected="false" data-rank="newest">新着</button>
+        <button type="button" role="tab" id="tab-rising" aria-selected="false" data-rank="rising">急上昇</button>
+        <button type="button" role="tab" id="tab-shorts" aria-selected="false" data-rank="shorts">ショート</button>
+      </div>
+      <p class="rank-desc" id="rank-desc"></p>
+      <ol class="rank-scroller" id="rank-list"></ol>
     </section>
 
     <div class="status-row">
@@ -452,19 +628,38 @@
       "use strict";
 
       var PAGE_SIZE = 50;
+      var RANK_SIZE = 12;
+      var LIKE_RATE_MIN_VIEWS_GRID = 10000;
+      var LIKE_RATE_MIN_VIEWS_RANK = 100000;
+      var RISING_DAYS = 60;
       var channels = [];
-      var videos = []; // {id, title, ch, short, views, norm}
+      var videos = [];
       var limit = PAGE_SIZE;
+      var rankCache = null;
+      var currentRank = "views";
 
       var elQ = document.getElementById("q");
       var elCh = document.getElementById("channel");
+      var elSort = document.getElementById("sort");
       var elShorts = document.getElementById("shorts-only");
       var elStatus = document.getElementById("status");
       var elResults = document.getElementById("results");
       var elMore = document.getElementById("more");
       var elCount = document.getElementById("result-count");
       var elGrid = document.getElementById("channel-grid");
+      var elRankTabs = document.getElementById("rank-tabs");
+      var elRankList = document.getElementById("rank-list");
+      var elRankDesc = document.getElementById("rank-desc");
       var channelUrls = [];
+
+      var RANK_META = {
+        views: "再生回数が多かった動画のトップ12です。横にスライドして見られます。",
+        likes: "いいねの数が多かった動画のトップ12です。",
+        likeRate: "再生10万回以上で、いいね率（いいね÷再生）が高い日本語タイトルの動画です。",
+        newest: "公開日が新しい動画のトップ12です。",
+        rising: "過去60日に公開され、1日あたりの再生回数が多い動画です。",
+        shorts: "ショート動画のうち、再生回数が多かったトップ12です。"
+      };
 
       function normalize(s) {
         var t = (s || "").normalize("NFKC").toLowerCase();
@@ -485,18 +680,54 @@
         return n.toLocaleString("ja-JP");
       }
 
-      function formatViews(n) {
+      function formatCompact(n) {
         if (n >= 100000000) {
           var oku = n / 100000000;
           var os = oku >= 10 ? oku.toFixed(0) : oku.toFixed(1).replace(/\.0$/, "");
-          return os + "億回";
+          return os + "億";
         }
         if (n >= 10000) {
           var man = n / 10000;
           var ms = man >= 10 ? man.toFixed(0) : man.toFixed(1).replace(/\.0$/, "");
-          return ms + "万回";
+          return ms + "万";
         }
-        return n.toLocaleString("ja-JP") + "回";
+        return n.toLocaleString("ja-JP");
+      }
+
+      function formatViews(n) {
+        return formatCompact(n) + "回";
+      }
+
+      function hasJP(title) {
+        return /[\u3040-\u30ff\u3400-\u9fff]/.test(title || "");
+      }
+
+      function daysOld(ymd) {
+        if (!ymd || typeof ymd !== "string") return null;
+        var p = ymd.split("-");
+        if (p.length !== 3) return null;
+        var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+        if (isNaN(d.getTime())) return null;
+        var now = new Date();
+        var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        return Math.round((today - d) / 86400000);
+      }
+
+      function formatWhen(ymd) {
+        var days = daysOld(ymd);
+        if (days === null) return "";
+        if (days <= 0) return "今日";
+        if (days === 1) return "昨日";
+        if (days < 7) return days + "日前";
+        if (days < 30) return Math.floor(days / 7) + "週間前";
+        if (days < 365) return Math.floor(days / 30) + "ヶ月前";
+        var p = ymd.split("-");
+        return Number(p[0]) + "年" + Number(p[1]) + "月" + Number(p[2]) + "日";
+      }
+
+      function likeRate(v, minViews) {
+        if (v.views < minViews || v.likes < 0 || v.views <= 0) return -1;
+        return v.likes / v.views;
       }
 
       function escapeHtml(s) {
@@ -506,7 +737,6 @@
           .replace(/>/g, "&gt;")
           .replace(/"/g, "&quot;");
       }
-
 
       function syncChannelCards() {
         if (!elGrid) return;
@@ -569,6 +799,38 @@
         syncChannelCards();
       }
 
+      function sortVideos(arr) {
+        var mode = elSort.value;
+        var copy = arr.slice();
+        copy.sort(function (a, b) {
+          if (mode === "likes") {
+            var al = a.likes < 0 ? -1 : a.likes;
+            var bl = b.likes < 0 ? -1 : b.likes;
+            if (bl !== al) return bl - al;
+            return (b.views < 0 ? -1 : b.views) - (a.views < 0 ? -1 : a.views);
+          }
+          if (mode === "newest") {
+            var ap = a.published || "";
+            var bp = b.published || "";
+            if (!ap && !bp) return (b.views < 0 ? -1 : b.views) - (a.views < 0 ? -1 : a.views);
+            if (!ap) return 1;
+            if (!bp) return -1;
+            if (bp !== ap) return bp < ap ? -1 : 1;
+            return (b.views < 0 ? -1 : b.views) - (a.views < 0 ? -1 : a.views);
+          }
+          if (mode === "likeRate") {
+            var ar = likeRate(a, LIKE_RATE_MIN_VIEWS_GRID);
+            var br = likeRate(b, LIKE_RATE_MIN_VIEWS_GRID);
+            if (br !== ar) return br - ar;
+            return (b.views < 0 ? -1 : b.views) - (a.views < 0 ? -1 : a.views);
+          }
+          var av = a.views < 0 ? -1 : a.views;
+          var bv = b.views < 0 ? -1 : b.views;
+          return bv - av;
+        });
+        return copy;
+      }
+
       function currentFilters() {
         var tokens = normalize(elQ.value)
           .split(" ")
@@ -593,7 +855,7 @@
           }
           out.push(v);
         }
-        return out;
+        return sortVideos(out);
       }
 
       function thumbHtml(v) {
@@ -607,6 +869,130 @@
             "</svg>" +
           "</span>"
         );
+      }
+
+      function bindThumbErrors(root) {
+        var imgs = root.querySelectorAll("img.thumb");
+        for (var t = 0; t < imgs.length; t++) {
+          imgs[t].addEventListener("error", function () {
+            this.style.display = "none";
+            if (this.nextElementSibling) this.nextElementSibling.removeAttribute("hidden");
+          });
+        }
+      }
+
+      function statsLine(v) {
+        var parts = [];
+        if (v.views >= 0) parts.push(formatViews(v.views));
+        if (v.likes >= 0) parts.push("👍 " + formatCompact(v.likes));
+        var when = formatWhen(v.published);
+        if (when) parts.push(when);
+        if (!parts.length) return "";
+        var html = '<p class="stats-line">';
+        for (var i = 0; i < parts.length; i++) {
+          if (i) html += "<span aria-hidden=\"true\">·</span>";
+          html += "<span>" + escapeHtml(parts[i]) + "</span>";
+        }
+        html += "</p>";
+        return html;
+      }
+
+      function rankMetric(kind, v) {
+        if (kind === "likes") {
+          return v.likes >= 0 ? "👍 " + formatCompact(v.likes) : "";
+        }
+        if (kind === "likeRate") {
+          var r = likeRate(v, LIKE_RATE_MIN_VIEWS_RANK);
+          return r >= 0 ? "いいね率 " + (r * 100).toFixed(2) + "%" : "";
+        }
+        if (kind === "newest") {
+          return formatWhen(v.published);
+        }
+        if (kind === "rising") {
+          var d = daysOld(v.published);
+          if (d === null || v.views < 0) return "";
+          return formatCompact(Math.round(v.views / Math.max(d, 1))) + "回/日";
+        }
+        return v.views >= 0 ? formatViews(v.views) : "";
+      }
+
+      function byViewsDesc(a, b) {
+        return (b.views < 0 ? -1 : b.views) - (a.views < 0 ? -1 : a.views);
+      }
+
+      function buildRankings() {
+        var views = videos.filter(function (v) { return v.views >= 0; }).slice().sort(byViewsDesc).slice(0, RANK_SIZE);
+        var likes = videos.filter(function (v) { return v.likes >= 0; }).slice().sort(function (a, b) {
+          if (b.likes !== a.likes) return b.likes - a.likes;
+          return byViewsDesc(a, b);
+        }).slice(0, RANK_SIZE);
+        var likeRateList = videos.filter(function (v) {
+          return likeRate(v, LIKE_RATE_MIN_VIEWS_RANK) >= 0 && hasJP(v.title);
+        }).slice().sort(function (a, b) {
+          var dlt = likeRate(b, LIKE_RATE_MIN_VIEWS_RANK) - likeRate(a, LIKE_RATE_MIN_VIEWS_RANK);
+          if (dlt) return dlt;
+          return byViewsDesc(a, b);
+        }).slice(0, RANK_SIZE);
+        var newest = videos.filter(function (v) { return !!v.published; }).slice().sort(function (a, b) {
+          if (b.published !== a.published) return b.published < a.published ? -1 : 1;
+          return byViewsDesc(a, b);
+        }).slice(0, RANK_SIZE);
+        var rising = videos.filter(function (v) {
+          var d = daysOld(v.published);
+          return d !== null && d <= RISING_DAYS && v.views >= 0;
+        }).slice().sort(function (a, b) {
+          var sa = a.views / Math.max(daysOld(a.published), 1);
+          var sb = b.views / Math.max(daysOld(b.published), 1);
+          if (sb !== sa) return sb - sa;
+          return byViewsDesc(a, b);
+        }).slice(0, RANK_SIZE);
+        var shorts = videos.filter(function (v) { return v.short && v.views >= 0; }).slice().sort(byViewsDesc).slice(0, RANK_SIZE);
+        rankCache = {
+          views: views,
+          likes: likes,
+          likeRate: likeRateList,
+          newest: newest,
+          rising: rising,
+          shorts: shorts
+        };
+      }
+
+      function renderRankings() {
+        if (!rankCache || !elRankList) return;
+        var kind = currentRank;
+        var list = rankCache[kind] || [];
+        elRankDesc.textContent = RANK_META[kind] || "";
+        var tabs = elRankTabs.querySelectorAll("button[data-rank]");
+        for (var t = 0; t < tabs.length; t++) {
+          tabs[t].setAttribute("aria-selected", tabs[t].getAttribute("data-rank") === kind ? "true" : "false");
+        }
+        var html = "";
+        for (var i = 0; i < list.length; i++) {
+          var v = list[i];
+          var href = "video.html?id=" + encodeURIComponent(v.id);
+          var medal = i === 0 ? " is-gold" : i === 1 ? " is-silver" : i === 2 ? " is-bronze" : "";
+          var chName = channels[v.ch] || "";
+          var metric = rankMetric(kind, v);
+          var sub = chName;
+          if (metric) sub += (sub ? " · " : "") + metric;
+          html +=
+            '<li class="rank-card' + medal + '"><a href="' +
+            escapeHtml(href) +
+            '"><div class="rank-thumb-wrap">' +
+            thumbHtml(v) +
+            '<span class="rank-no" aria-label="' +
+            (i + 1) +
+            '位">' +
+            (i + 1) +
+            '</span></div><p class="rank-title">' +
+            escapeHtml(v.title) +
+            '</p><p class="rank-sub">' +
+            escapeHtml(sub) +
+            "</p></a></li>";
+        }
+        elRankList.innerHTML = html;
+        elRankList.scrollLeft = 0;
+        bindThumbErrors(elRankList);
       }
 
       function render() {
@@ -633,8 +1019,6 @@
           var v = shown[i];
           var href = "video.html?id=" + encodeURIComponent(v.id);
           var chName = channels[v.ch] || "";
-          var sub = chName;
-          if (v.views >= 0) sub += " · " + formatViews(v.views);
           html +=
             '<li class="item' + (v.short ? ' is-short' : '') + '"><a href="' +
             escapeHtml(href) +
@@ -643,19 +1027,14 @@
             '<div class="meta"><p class="title">' +
             escapeHtml(v.title) +
             '</p><p class="sub">' +
-            escapeHtml(sub) +
+            escapeHtml(chName) +
             "</p>" +
+            statsLine(v) +
             (v.short ? '<span class="badge">ショート</span>' : "") +
             "</div></a></li>";
         }
         elResults.innerHTML = html;
-        var imgs = elResults.querySelectorAll("img.thumb");
-        for (var t = 0; t < imgs.length; t++) {
-          imgs[t].addEventListener("error", function () {
-            this.style.display = "none";
-            if (this.nextElementSibling) this.nextElementSibling.removeAttribute("hidden");
-          });
-        }
+        bindThumbErrors(elResults);
 
         if (remaining > 0) {
           elMore.hidden = false;
@@ -675,11 +1054,38 @@
 
       elQ.addEventListener("input", resetAndRender);
       elCh.addEventListener("change", resetAndRender);
+      elSort.addEventListener("change", resetAndRender);
       elShorts.addEventListener("change", resetAndRender);
       elMore.addEventListener("click", function () {
         limit += PAGE_SIZE;
         render();
       });
+      elRankTabs.addEventListener("click", function (ev) {
+        var btn = ev.target.closest("button[data-rank]");
+        if (!btn || !elRankTabs.contains(btn)) return;
+        var kind = btn.getAttribute("data-rank");
+        if (!kind || kind === currentRank) return;
+        currentRank = kind;
+        renderRankings();
+      });
+
+      function parseRow(r) {
+        var isShort = r[3] === 1 || r[3] === true;
+        var published = r[7];
+        if (typeof published !== "string") published = "";
+        return {
+          id: r[0],
+          title: r[1],
+          ch: r[2],
+          short: isShort,
+          views: typeof r[4] === "number" ? r[4] : -1,
+          likes: typeof r[5] === "number" ? r[5] : -1,
+          comments: typeof r[6] === "number" ? r[6] : -1,
+          published: published,
+          duration: typeof r[8] === "number" ? r[8] : -1,
+          norm: normalize(r[1])
+        };
+      }
 
       fetch("data.json")
         .then(function (res) {
@@ -692,17 +1098,8 @@
           videos = new Array(rows.length);
           var shortCount = 0;
           for (var i = 0; i < rows.length; i++) {
-            var r = rows[i];
-            var isShort = r[3] === 1 || r[3] === true;
-            if (isShort) shortCount++;
-            videos[i] = {
-              id: r[0],
-              title: r[1],
-              ch: r[2],
-              short: isShort,
-              views: typeof r[4] === "number" ? r[4] : -1,
-              norm: normalize(r[1])
-            };
+            videos[i] = parseRow(rows[i]);
+            if (videos[i].short) shortCount++;
           }
           document.getElementById("stat-total").textContent = formatCount(videos.length);
           document.getElementById("stat-shorts").textContent = formatCount(shortCount);
@@ -724,12 +1121,14 @@
             elCh.appendChild(opt);
           }
           renderChannelGrid();
+          buildRankings();
+          renderRankings();
 
           var note = document.getElementById("footnote");
           var when = data.generatedAtLabel || "";
           note.textContent =
             (when ? when + "時点の、" : "") +
-            "YouTube公開アップロード一覧です。視聴回数はほぼすべての動画で取得できましたが、投稿日は一覧に含まれていません。映画カルチュア FilmIsNow Japanは公開一覧の11,477本を収録しています（以前のチャンネル総数11,540本より63本少ない）。映画ドラマ二アックは公開アップロード15本に加え、メンバー限定など4本を含む19本です。ほかのチャンネルは総数と一致しています。";
+            "YouTube公開アップロード一覧です。再生回数・いいね数・コメント数・公開日・再生時間はYouTube Data APIから取得しています。メンバー限定や削除済みなど、一部の動画では取得できない項目があります。映画カルチュア FilmIsNow Japanは公開一覧の11,477本を収録しています（以前のチャンネル総数11,540本より63本少ない）。映画ドラマ二アックは公開アップロード15本に加え、メンバー限定など4本を含む19本です。ほかのチャンネルは総数と一致しています。";
 
           render();
         })

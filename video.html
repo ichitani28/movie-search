@@ -172,6 +172,36 @@
       outline-offset: 2px;
     }
     .yt-btn:active { opacity: 0.9; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      list-style: none;
+      margin: 0 0 14px;
+      padding: 0;
+    }
+    .stats-grid li {
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 10px;
+      min-width: 0;
+    }
+    .stats-grid b {
+      display: block;
+      font-size: 0.98rem;
+      font-weight: 700;
+      line-height: 1.3;
+      overflow-wrap: anywhere;
+    }
+    .stats-grid span {
+      display: block;
+      color: var(--text-sub);
+      font-size: 0.72rem;
+      font-weight: 600;
+      margin-top: 2px;
+    }
     .related {
       margin-top: 32px;
     }
@@ -256,6 +286,7 @@
       </div>
       <h1 id="title"></h1>
       <p class="sub" id="sub"></p>
+      <ul class="stats-grid" id="stats" hidden></ul>
       <span class="badge" id="badge" hidden>ショート</span>
 
       <!-- 広告スニペットをここに貼り付け（AdSense など） -->
@@ -295,18 +326,63 @@
         } catch (err) {}
       });
 
-      function formatViews(n) {
+      function formatCompact(n) {
         if (n >= 100000000) {
           var oku = n / 100000000;
           var os = oku >= 10 ? oku.toFixed(0) : oku.toFixed(1).replace(/\.0$/, "");
-          return os + "億回";
+          return os + "億";
         }
         if (n >= 10000) {
           var man = n / 10000;
           var ms = man >= 10 ? man.toFixed(0) : man.toFixed(1).replace(/\.0$/, "");
-          return ms + "万回";
+          return ms + "万";
         }
-        return n.toLocaleString("ja-JP") + "回";
+        return n.toLocaleString("ja-JP");
+      }
+
+      function formatViews(n) {
+        return formatCompact(n) + "回";
+      }
+
+      function formatDuration(sec) {
+        if (typeof sec !== "number" || sec <= 0) return "";
+        var h = Math.floor(sec / 3600);
+        var m = Math.floor((sec % 3600) / 60);
+        var s = Math.floor(sec % 60);
+        var parts = [];
+        if (h) parts.push(h + "時間");
+        if (m) parts.push(m + "分");
+        if (s && !h) parts.push(s + "秒");
+        if (!parts.length) parts.push("0秒");
+        return parts.join("");
+      }
+
+      function formatDate(ymd) {
+        if (!ymd || typeof ymd !== "string") return "";
+        var p = ymd.split("-");
+        if (p.length !== 3) return "";
+        return Number(p[0]) + "年" + Number(p[1]) + "月" + Number(p[2]) + "日";
+      }
+
+      function daysOld(ymd) {
+        if (!ymd || typeof ymd !== "string") return null;
+        var p = ymd.split("-");
+        if (p.length !== 3) return null;
+        var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+        if (isNaN(d.getTime())) return null;
+        var now = new Date();
+        var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        return Math.round((today - d) / 86400000);
+      }
+
+      function formatWhen(ymd) {
+        var days = daysOld(ymd);
+        if (days === null) return "";
+        if (days <= 0) return "今日";
+        if (days === 1) return "昨日";
+        if (days < 7) return days + "日前";
+        if (days < 30) return Math.floor(days / 7) + "週間前";
+        return formatDate(ymd);
       }
 
       function escapeHtml(s) {
@@ -374,12 +450,18 @@
           for (var i = 0; i < rows.length; i++) {
             var r = rows[i];
             var isShort = r[3] === 1 || r[3] === true;
+            var published = r[7];
+            if (typeof published !== "string") published = "";
             var v = {
               id: r[0],
               title: r[1],
               ch: r[2],
               short: isShort,
-              views: typeof r[4] === "number" ? r[4] : -1
+              views: typeof r[4] === "number" ? r[4] : -1,
+              likes: typeof r[5] === "number" ? r[5] : -1,
+              comments: typeof r[6] === "number" ? r[6] : -1,
+              published: published,
+              duration: typeof r[8] === "number" ? r[8] : -1
             };
             videos[i] = v;
             if (v.id === id) found = v;
@@ -408,12 +490,29 @@
           thumb.alt = found.title;
 
           document.getElementById("title").textContent = found.title;
-          var sub = chName;
-          if (found.views >= 0) {
-            sub += (sub ? " · " : "") + formatViews(found.views);
-          }
-          document.getElementById("sub").textContent = sub;
+          document.getElementById("sub").textContent = chName;
           document.getElementById("badge").hidden = !found.short;
+
+          var elStats = document.getElementById("stats");
+          var statItems = [];
+          if (found.views >= 0) statItems.push(["再生回数", formatViews(found.views)]);
+          if (found.likes >= 0) statItems.push(["いいね", formatCompact(found.likes)]);
+          if (found.comments >= 0) statItems.push(["コメント", formatCompact(found.comments) + "件"]);
+          if (found.published) {
+            var when = formatWhen(found.published);
+            var longDate = formatDate(found.published);
+            statItems.push(["公開日", longDate + (when && when !== longDate ? "（" + when + "）" : "")]);
+          }
+          var dur = formatDuration(found.duration);
+          if (dur) statItems.push(["再生時間", dur]);
+          if (statItems.length) {
+            var shtml = "";
+            for (var s = 0; s < statItems.length; s++) {
+              shtml += "<li><b>" + escapeHtml(statItems[s][1]) + "</b><span>" + escapeHtml(statItems[s][0]) + "</span></li>";
+            }
+            elStats.innerHTML = shtml;
+            elStats.hidden = false;
+          }
 
           var yt = document.getElementById("yt");
           yt.href = youtubeUrl(found.id, found.short);
@@ -433,8 +532,10 @@
             var html = "";
             for (var k = 0; k < related.length; k++) {
               var rv = related[k];
-              var rsub = "";
-              if (rv.views >= 0) rsub = formatViews(rv.views);
+              var rparts = [];
+              if (rv.views >= 0) rparts.push(formatViews(rv.views));
+              if (rv.likes >= 0) rparts.push("👍 " + formatCompact(rv.likes));
+              var rsub = rparts.join(" · ");
               html +=
                 '<li class="item' + (rv.short ? " is-short" : "") + '"><a href="video.html?id=' +
                 encodeURIComponent(rv.id) +
