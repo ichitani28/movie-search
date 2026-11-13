@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)">
   <meta name="theme-color" content="#f6f4f0" media="(prefers-color-scheme: light)">
-  <meta name="description" content="登録8チャンネルの映画まとめ動画を、タイトルで検索できます。">
+  <meta name="description" content="登録9チャンネルの映画まとめ動画を、タイトルで検索できます。">
   <title>映画まとめ動画検索</title>
   <style>
     :root {
@@ -406,11 +406,11 @@
   <div class="wrap">
     <header>
       <h1>映画まとめ動画検索</h1>
-      <p class="lede">登録している8チャンネルのまとめ動画を、タイトルの一部で検索できます。最初はショート動画を先頭に並べています。上の一覧からチャンネルを選べます。</p>
+      <p class="lede">登録している9チャンネルのまとめ動画を、タイトルの一部で検索できます。最初はショート動画を先頭に並べています。上の一覧からチャンネルを選べます。</p>
       <div class="metrics" aria-label="登録数">
         <div class="metric"><b id="stat-total">—</b><span>登録動画</span></div>
         <div class="metric"><b id="stat-shorts">—</b><span>ショート</span></div>
-        <div class="metric"><b id="stat-channels">8</b><span>チャンネル</span></div>
+        <div class="metric"><b id="stat-channels">9</b><span>チャンネル</span></div>
       </div>
     </header>
 
@@ -729,7 +729,7 @@
           var when = data.generatedAtLabel || "";
           note.textContent =
             (when ? when + "時点の、" : "") +
-            "YouTube公開アップロード一覧です。視聴回数はほぼすべての動画で取得できましたが、投稿日は一覧に含まれていません。映画カルチュア FilmIsNow Japanは公開一覧の11,477本を収録しています（以前のチャンネル総数11,540本より63本少ない）。ほかの7チャンネルは総数と一致しています。";
+            "YouTube公開アップロード一覧です。視聴回数はほぼすべての動画で取得できましたが、投稿日は一覧に含まれていません。映画カルチュア FilmIsNow Japanは公開一覧の11,477本を収録しています（以前のチャンネル総数11,540本より63本少ない）。映画ドラマ二アックは公開アップロード15本に加え、メンバー限定など4本を含む19本です。ほかのチャンネルは総数と一致しています。";
 
           render();
         })
